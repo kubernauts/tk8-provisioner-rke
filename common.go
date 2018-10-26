@@ -8,18 +8,19 @@ import (
 
 	"github.com/blang/semver"
 	"github.com/kubernauts/tk8-provisioner-rke/internal/cluster"
+	"github.com/kubernauts/tk8/pkg/provisioner"
 )
 
 type RKE struct {
 }
 
-var Name string
+// var Name string
 
 func (p RKE) Init(args []string) {
-	Name = cluster.Name
-	if len(Name) == 0 {
-		Name = "TK8RKE"
-	}
+	// Name = cluster.Name
+	// if len(Name) == 0 {
+	// 	Name = "TK8RKE"
+	// }
 	// cluster.KubesprayInit()
 	// cluster.Create()
 }
@@ -71,12 +72,12 @@ func (p RKE) Setup(args []string) {
 }
 
 func (p RKE) Scale(args []string) {
-	cluster.Scale()
+	provisioner.NotImplemented()
 
 }
 
 func (p RKE) Reset(args []string) {
-	cluster.Reset()
+	cluster.RKEReset()
 
 }
 
@@ -88,7 +89,7 @@ func (p RKE) Remove(args []string) {
 }
 
 func (p RKE) Upgrade(args []string) {
-	cluster.NotImplemented()
+	provisioner.NotImplemented()
 }
 
 func (p RKE) Destroy(args []string) {
@@ -96,7 +97,7 @@ func (p RKE) Destroy(args []string) {
 	cluster.RKEDestroy()
 }
 
-func NewRKE() cluster.Provisioner {
+func NewRKE() provisioner.Provisioner {
 	cluster.SetClusterName()
 	provisioner := new(RKE)
 	return provisioner

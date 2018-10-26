@@ -7,19 +7,20 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/kubernauts/tk8-provisioner-rke/internal/templates"
+	"github.com/kubernauts/tk8/pkg/provisioner"
+	"github.com/kubernauts/tk8/pkg/templates"
 	"github.com/spf13/viper"
 )
 
-type RKEConfig struct {
-	ClusterName         string
-	AWSRegion           string
-	RKENodeInstanceType string
-	NodeCount           int
-	SSHKeyPath          string
-	CloudProvider       string
-	NodeOS              string
-}
+// type RKEConfig struct {
+// 	ClusterName         string
+// 	AWSRegion           string
+// 	RKENodeInstanceType string
+// 	NodeCount           int
+// 	SSHKeyPath          string
+// 	CloudProvider       string
+// 	NodeOS              string
+// }
 
 type rkeDistOS struct {
 	User     string
@@ -81,22 +82,22 @@ func rkeGetDistConfig() (string, string, string) {
 	return awsAmiID, awsInstanceOS, sshUser
 }
 
-func GetRKEConfig() RKEConfig {
-	ReadViperConfigFile("config")
-	return RKEConfig{
-		ClusterName:         viper.GetString("rke.cluster_name"),
-		AWSRegion:           viper.GetString("rke.rke_aws_region"),
-		RKENodeInstanceType: viper.GetString("rke.rke_node_instance_type"),
-		NodeCount:           viper.GetInt("rke.node_count"),
-		CloudProvider:       viper.GetString("rke.cloud_provider"),
-	}
-}
+// func GetRKEConfig() RKEConfig {
+// 	ReadViperConfigFile("config")
+// 	return RKEConfig{
+// 		ClusterName:         viper.GetString("rke.cluster_name"),
+// 		AWSRegion:           viper.GetString("rke.rke_aws_region"),
+// 		RKENodeInstanceType: viper.GetString("rke.rke_node_instance_type"),
+// 		NodeCount:           viper.GetInt("rke.node_count"),
+// 		CloudProvider:       viper.GetString("rke.cloud_provider"),
+// 	}
+// }
 
 func rkePrepareConfigFiles(InstanceOS string, Name string) {
 	fmt.Println(InstanceOS)
-	ParseTemplate(templates.VariablesRKE, "./inventory/"+Name+"/provisioner/variables.tf", GetRKEConfig())
-	ParseTemplate(templates.DistVariablesRKE, "./inventory/"+Name+"/provisioner/modules/rke/distos.tf", rkeDistOSMap[InstanceOS])
-	ParseTemplate(templates.Credentials, "./inventory/"+Name+"/provisioner/credentials.tfvars", GetCredentials())
+	templates.ParseTemplate(templates.VariablesRKE, "./inventory/"+Name+"/provisioner/variables.tf", GetRKEConfig())
+	templates.ParseTemplate(templates.DistVariablesRKE, "./inventory/"+Name+"/provisioner/modules/rke/distos.tf", rkeDistOSMap[InstanceOS])
+	templates.ParseTemplate(templates.Credentials, "./inventory/"+Name+"/provisioner/credentials.tfvars", GetCredentials())
 
 }
 
@@ -129,25 +130,8 @@ func Install() {
 		terrInit.Wait()
 	}
 
-	//	log.Println("starting terraform apply")
-	//	terrSet := exec.Command("terraform", "apply", "-var-file=credentials.tfvars", "-auto-approve")
-	//	terrSet.Dir = "./inventory/" + Name + "/provisioner/"
-	//	stdout, err := terrSet.StdoutPipe()
-	//	terrSet.Stderr = terrSet.Stdout
-	//	terrSet.Start()
-	//
-	//	scanner := bufio.NewScanner(stdout)
-	//	for scanner.Scan() {
-	//		m := scanner.Text()
-	//		fmt.Println(m)
-	//	}
-	//
-	//	terrSet.Wait()
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	log.Println("starting terraform plan")
-	terrSet := exec.Command("terraform", "plan", "-var-file=credentials.tfvars")
+	log.Println("starting terraform apply")
+	terrSet := exec.Command("terraform", "apply", "-var-file=credentials.tfvars", "-auto-approve")
 	terrSet.Dir = "./inventory/" + Name + "/provisioner/"
 	stdout, err := terrSet.StdoutPipe()
 	terrSet.Stderr = terrSet.Stdout
@@ -163,42 +147,59 @@ func Install() {
 	if err != nil {
 		panic(err)
 	}
+	// log.Println("starting terraform plan")
+	// terrSet := exec.Command("terraform", "plan", "-var-file=credentials.tfvars")
+	// terrSet.Dir = "./inventory/" + Name + "/provisioner/"
+	// stdout, err := terrSet.StdoutPipe()
+	// terrSet.Stderr = terrSet.Stdout
+	// terrSet.Start()
+
+	// scanner := bufio.NewScanner(stdout)
+	// for scanner.Scan() {
+	// 	m := scanner.Text()
+	// 	fmt.Println(m)
+	// }
+
+	// terrSet.Wait()
+	// if err != nil {
+	// 	panic(err)
+	// }
 	// Export KUBECONFIG file to the installation folder
-	//log.Println("Moving kubeconfig and rke cluster config files to the installation folder")
-	//kubeConfigold := "./inventory/" + Name + "/provisioner/kube_config_rancher-cluster.yml"
-	//kubeConfignew := "./kube_config_rancher-cluster.yml"
-	//rkeConfigold := "./inventory/" + Name + "/provisioner/rancher-cluster.yml"
-	//rkeConfignew := "./rancher-cluster.yml"
-	//errmvKubeconfig := os.Rename(kubeConfigold, kubeConfignew)
+	log.Println("Moving kubeconfig and rke cluster config files to the installation folder")
+	kubeConfigold := "./inventory/" + Name + "/provisioner/kube_config_rancher-cluster.yml"
+	kubeConfignew := "./kube_config_rancher-cluster.yml"
+	rkeConfigold := "./inventory/" + Name + "/provisioner/rancher-cluster.yml"
+	rkeConfignew := "./rancher-cluster.yml"
+	errmvKubeconfig := os.Rename(kubeConfigold, kubeConfignew)
 
-	//if errmvKubeconfig != nil {
-	//	fmt.Println(errmvKubeconfig)
-	//}
+	if errmvKubeconfig != nil {
+		fmt.Println(errmvKubeconfig)
+	}
 
-	//errmvRkeConfig := os.Rename(rkeConfigold, rkeConfignew)
+	errmvRkeConfig := os.Rename(rkeConfigold, rkeConfignew)
 
-	//if errmvRkeConfig != nil {
-	//	fmt.Println(errmvRkeConfig)
-	//}
+	if errmvRkeConfig != nil {
+		fmt.Println(errmvRkeConfig)
+	}
 
-	//log.Println("Voila! Kubernetes cluster created with RKE is up and running")
-	//log.Println("Writing private_key to the file from terraform output")
-	//writePrivKey := exec.Command("terraform", "output", "private_key", ">>", "./rke-ssh-key.pem")
-	//writePrivKey.Dir = "./inventory/" + Name + "/provisioner/"
-	//stdout, err = writePrivKey.StdoutPipe()
-	//writePrivKey.Stderr = writePrivKey.Stdout
-	//writePrivKey.Start()
+	log.Println("Writing private_key to the file from terraform output")
+	writePrivKey := exec.Command("terraform", "output", "private_key", ">>", "./rke-ssh-key.pem")
+	writePrivKey.Dir = "./inventory/" + Name + "/provisioner/"
+	stdout, err = writePrivKey.StdoutPipe()
+	writePrivKey.Stderr = writePrivKey.Stdout
+	writePrivKey.Start()
 
-	//scanner = bufio.NewScanner(stdout)
-	//for scanner.Scan() {
-	//	m := scanner.Text()
-	//	fmt.Println(m)
-	//}
+	scanner = bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		m := scanner.Text()
+		fmt.Println(m)
+	}
 
-	//writePrivKey.Wait()
-	//if err != nil {
-	//	panic(err)
-	//}
+	writePrivKey.Wait()
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Voila! Kubernetes cluster created with RKE is up and running")
 
 	os.Exit(0)
 
@@ -206,7 +207,7 @@ func Install() {
 
 // Reset is used to reset the  Kubernetes Cluster back to rollout on the infrastructure.
 func RKEReset() {
-	NotImplemented()
+	provisioner.NotImplemented()
 }
 
 // Remove is used to remove the Kubernetes Cluster from the infrastructure

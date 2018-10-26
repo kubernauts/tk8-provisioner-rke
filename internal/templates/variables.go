@@ -29,12 +29,6 @@ variable "node_count" {
   description = "Autoscaling Desired node capacity"
 }
 
-variable "ssh_key_path" {
-  default = "{{.SSHKeyPath}}"
-  type    = "string"
-  description = "path to your rke public key"
-}
-
 variable "cloud_provider" {
   default = "{{.CloudProvider}}"
   type    = "string"

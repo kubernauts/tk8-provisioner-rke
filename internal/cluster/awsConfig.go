@@ -13,7 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	petname "github.com/dustinkirkland/golang-petname"
-	"github.com/kubernauts/tk8-provisioner-rke/internal/templates"
+	"github.com/kubernauts/tk8/pkg/common"
+	"github.com/kubernauts/tk8/pkg/templates"
 	"github.com/spf13/viper"
 )
 
@@ -52,7 +53,7 @@ func getCreds() (string, string) {
 
 	err := os.Setenv("AWS_ACCESS_KEY_ID", accessKey)
 	err = os.Setenv("AWS_SECRET_ACCESS_KEY", secretKey)
-	ErrorCheck("Error setting the credentials environment variable: ", err)
+	common.ErrorCheck("Error setting the credentials environment variable: ", err)
 
 	return accessKey, secretKey
 }
@@ -84,7 +85,7 @@ func CreateConfig() {
 		accessKey, secretKey := getCreds()
 		confStruct = Config{AccessKey: accessKey, SecretKey: secretKey, ClusterName: generatedName, SSHName: generatedName}
 	}
-	ParseTemplate(templates.Config, "./config.yaml", confStruct)
+	templates.ParseTemplate(templates.Config, "./config.yaml", confStruct)
 	ReadViperConfigFile("config")
 	region := viper.GetString("aws.aws_default_region")
 	CreateSSHKey(generatedName, region)

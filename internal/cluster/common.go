@@ -1,13 +1,7 @@
 package cluster
 
 import (
-	"bufio"
-	"fmt"
-	"os"
-	"os/exec"
-	"strings"
-
-	"github.com/alecthomas/template"
+	"github.com/kubernauts/tk8/pkg/common"
 	"github.com/spf13/viper"
 )
 
@@ -21,7 +15,6 @@ type AwsCredentials struct {
 
 var (
 	kubesprayVersion = "version-0-4"
-	Name             string
 )
 
 // DistOS defines the structure to hold the dist OS informations.
@@ -103,6 +96,58 @@ func GetCredentials() AwsCredentials {
 	}
 }
 
+type RKEConfig struct {
+	ClusterName         string
+	AWSRegion           string
+	RKENodeInstanceType string
+	NodeCount           int
+	SSHKeyPath          string
+	CloudProvider       string
+	NodeOS              string
+}
+
+func GetRKEConfig() RKEConfig {
+	ReadViperConfigFile("config")
+	return RKEConfig{
+		ClusterName:         viper.GetString("rke.cluster_name"),
+		AWSRegion:           viper.GetString("rke.rke_aws_region"),
+		RKENodeInstanceType: viper.GetString("rke.rke_node_instance_type"),
+		NodeCount:           viper.GetInt("rke.node_count"),
+		CloudProvider:       viper.GetString("rke.cloud_provider"),
+	}
+}
+
+func SetClusterName() {
+	if len(common.Name) < 1 {
+		config := GetRKEConfig()
+		common.Name = config.ClusterName
+	}
+}
+
+type EKSConfig struct {
+	ClusterName         string
+	AWSRegion           string
+	NodeInstanceType    string
+	DesiredCapacity     int
+	AutoScallingMinSize int
+	AutoScallingMaxSize int
+	KeyPath             string
+}
+
+// GetCredentials get the aws credentials from the config file.
+func GetEKSConfig() EKSConfig {
+	ReadViperConfigFile("config")
+	return EKSConfig{
+		ClusterName:         viper.GetString("eks.cluster-name"),
+		AWSRegion:           viper.GetString("eks.aws_region"),
+		NodeInstanceType:    viper.GetString("eks.node-instance-type"),
+		DesiredCapacity:     viper.GetInt("eks.desired-capacity"),
+		AutoScallingMinSize: viper.GetInt("eks.autoscalling-min-size"),
+		AutoScallingMaxSize: viper.GetInt("eks.autoscalling-max-size"),
+		KeyPath:             viper.GetString("eks.key-file-path"),
+	}
+}
+
 // GetClusterConfig get the configuration from the config file.
 func GetClusterConfig() ClusterConfig {
 	ReadViperConfigFile("config")
@@ -124,108 +169,32 @@ func GetClusterConfig() ClusterConfig {
 	}
 }
 
-func ParseTemplate(templateString string, outputFileName string, data interface{}) {
-	// open template
-	template := template.New("template")
-	template, _ = template.Parse(templateString)
-	// open output file
-	outputFile, err := os.Create(GetFilePath(outputFileName))
-	defer outputFile.Close()
-	if err != nil {
-		ExitErrorf("Error creating file %s: %v", outputFile, err)
-	}
-	err = template.Execute(outputFile, data)
-	ErrorCheck("Error executing template: %v", err)
-
-}
-
-// ErrorCheck is responsbile to check if there is any error returned by a command.
-func ErrorCheck(msg string, err error) {
-	if err != nil {
-		ExitErrorf(msg, err)
+// EnableKubeadm check for kubeadm_enable option and set the config respectively in playbook.
+func EnableKubeadm() {
+	ReadViperConfigFile("config")
+	kubeadmEnabled := viper.GetString("aws.kubeadm_enabled")
+	if kubeadmEnabled == "true" {
+		viper.SetConfigName("main")
+		viper.AddConfigPath("./kubespray/roles/kubespray-defaults/defaults")
+		err := viper.ReadInConfig()
+		common.ErrorCheck("Error reading the main.yaml config file", err)
+		viper.Set("kubeadm_enabled", true)
+		err = viper.WriteConfig()
+		common.ErrorCheck("Error writing the main.yaml config file", err)
 	}
 }
 
-// DependencyCheck check if the binary is installed
-func DependencyCheck(bin string) {
-	_, err := exec.LookPath(bin)
-	ErrorCheck(bin+" not found.", err)
+func SetNetworkPlugin(clusterFolder string) {
 
-	_, err = exec.Command(bin, "--version").Output()
-	ErrorCheck("Error executing "+bin, err)
-}
-
-// ExitErrorf exits the program with an error code of '1' and an error message.
-func ExitErrorf(msg string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, msg+"\n", args...)
-	os.Exit(1)
-}
-
-type Provisioner interface {
-	Init(args []string)
-	Setup(args []string)
-	Scale(args []string)
-	Remove(args []string)
-	Reset(args []string)
-	Upgrade(args []string)
-	Destroy(args []string)
-}
-
-func NotImplemented() {
-	fmt.Println("Not implemented yet. Coming soon...")
-	os.Exit(0)
-}
-
-func SetClusterName() {
-	if len(Name) < 1 {
-		config := GetClusterConfig()
-		Name = config.AwsClusterName
-	}
-}
-
-func RunPlaybook(path string, file string) {
-	DependencyCheck("ansible")
-	sshUser, osLabel := distSelect()
-	fmt.Printf("\nStarting playbook for user %s with os %s\n", sshUser, osLabel)
-	ansiblePlaybook := exec.Command("ansible-playbook", "-i", "hosts", file, "--timeout=60", "-e ansible_user="+sshUser, "-e ansible_user="+sshUser, "-e bootstrap_os="+osLabel, "-b", "--become-user=root", "--flush-cache")
-	ansiblePlaybook.Dir = path
-	ansiblePlaybook.Stdout = os.Stdout
-	ansiblePlaybook.Stdin = os.Stdin
-	ansiblePlaybook.Stderr = os.Stderr
-
-	ansiblePlaybook.Start()
-	ansiblePlaybook.Wait()
-}
-
-func ExecuteTerraform(command string, path string) {
-
-	DependencyCheck("terraform")
-	var terrSet *exec.Cmd
-
-	if strings.Compare(strings.TrimRight(command, "\n"), "init") == 0 {
-		terrSet = exec.Command("terraform", command, "-var-file=credentials.tfvars")
-	} else if strings.Compare(command, "apply") == 0 {
-		terrSet = exec.Command("terraform", command, "-var-file=credentials.tfvars", "-auto-approve")
-	} else {
-		terrSet = exec.Command("terraform", command, "-var-file=credentials.tfvars", "-force")
+	ReadViperConfigFile("config")
+	kubeNetworkPlugin := viper.GetString("aws.kube_network_plugin")
+	viper.SetConfigName("k8s-cluster")
+	viper.AddConfigPath(clusterFolder)
+	err := viper.ReadInConfig()
+	common.ErrorCheck("Error reading the main.yaml config file", err)
+	if len(kubeNetworkPlugin) > 3 {
+		viper.Set("kube_network_plugin", kubeNetworkPlugin)
+		err = viper.WriteConfig()
 	}
 
-	terrSet.Dir = path
-	stdout, _ := terrSet.StdoutPipe()
-	terrSet.Stderr = terrSet.Stdout
-	error := terrSet.Start()
-	if error != nil {
-		fmt.Println(error)
-	}
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		m := scanner.Text()
-		fmt.Println(m)
-		if strings.Contains(m, "Error: Error applying plan") {
-			fmt.Println("Terraform could not setup the infrastructure")
-			os.Exit(1)
-		}
-	}
-
-	terrSet.Wait()
 }

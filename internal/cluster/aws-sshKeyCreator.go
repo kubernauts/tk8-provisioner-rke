@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/kubernauts/tk8/pkg/common"
 )
 
 // CreateSSHKey is used to create a new SSH key in AWS for the user.
@@ -38,8 +39,8 @@ func CreateSSHKey(pairName, region string) {
 func errorCheck(err error) {
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == "InvalidKeyPair.Duplicate" {
-			ExitErrorf("Specified keypair already exists.")
+			common.ExitErrorf("Specified keypair already exists.")
 		}
-		ExitErrorf("Error while trying to create the specified key pair: %v.", err)
+		common.ExitErrorf("Error while trying to create the specified key pair: %v.", err)
 	}
 }

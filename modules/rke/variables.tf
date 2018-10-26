@@ -58,10 +58,6 @@ variable "rke_node_instance_type" {
   type = "string"
 }
 
-variable "ssh_key_path" {
-  type = "string"
-}
-
 variable "cluster_name" {
   type = "string"
 }
