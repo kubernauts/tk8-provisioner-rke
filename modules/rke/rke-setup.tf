@@ -14,7 +14,7 @@ resource rke_cluster "cluster" {
   nodes_conf = ["${data.rke_node_parameter.nodes.*.json}"]
 
   cloud_provider {
-    name = "{var.cloud_provider}"
+    name = "aws"
   }
 }
 
@@ -28,5 +28,5 @@ resource "local_file" "kube_cluster_yaml" {
 
 resource "local_file" "rke_yaml" {
   filename = "${path.root}/rancher-cluster.yml"
-  content = "${rke_cluster.cluster.rke_cluster_yaml}"
+  content  = "${rke_cluster.cluster.rke_cluster_yaml}"
 }

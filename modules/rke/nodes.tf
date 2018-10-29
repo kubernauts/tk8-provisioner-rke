@@ -60,7 +60,8 @@ resource "aws_security_group_rule" "ingress_self" {
 }
 
 resource "aws_instance" "rke-node" {
-  count = "${var.node_count}"
+  count      = "${var.node_count}"
+  depends_on = ["aws_internet_gateway.rke-ig", "aws_security_group.rke_security_group", "aws_security_group_rule.ingress_test", "aws_security_group_rule.ingress_test1", "aws_security_group_rule.ingress_world", "aws_security_group_rule.ingress_self"]
 
   ami                         = "${data.aws_ami.distro.id}"
   instance_type               = "${var.rke_node_instance_type}"
@@ -108,7 +109,6 @@ resource "aws_lb_target_group_attachment" "attach_nodes_rancher_tg-80" {
   target_group_arn = "${aws_lb_target_group.rancher-target-groups.0.arn}"
   target_id        = "${element(aws_instance.rke-node.*.id, count.index)}"
 }
-
 
 resource "aws_lb_target_group_attachment" "attach_nodes_rancher_tg-443" {
   count            = "${aws_instance.rke-node.count}"
