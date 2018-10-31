@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"os/user"
 	"strings"
 
 	"github.com/blang/semver"
 	"github.com/kubernauts/tk8-provisioner-rke/internal/cluster"
 	"github.com/kubernauts/tk8/pkg/provisioner"
+	"path/filepath"
 )
 
 type RKE struct {
@@ -25,6 +27,14 @@ func (p RKE) Init(args []string) {
 	// cluster.Create()
 }
 
+func checkRKEProvisionerFile(name string) (bool, error) {
+	matches, err := filepath.Glob(name + "*")
+	if err != nil {
+		return false, err
+	}
+	return len(matches) > 0, nil
+}
+
 func (p RKE) Setup(args []string) {
 	kube, err := exec.LookPath("kubectl")
 	if err != nil {
@@ -37,6 +47,17 @@ func (p RKE) Setup(args []string) {
 	}
 
 	log.Println(string(rr))
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	rkeProvisionerPath := usr.HomeDir + "/.terraform.d/plugins/terraform-provider-rke"
+	exists, _ := checkRKEProvisionerFile(rkeProvisionerPath)
+	if !exists {
+		fmt.Println("Terraform RKE provisioner plugin does not exists. Please check https://github.com/yamamoto-febc/terraform-provider-rke for installation instructions specific to your OS.")
+	} else {
+		fmt.Println("Terraform RKE provisioner exists. Good to go!")
+	}
 
 	//Check if kubectl version is greater or equal to 1.10
 

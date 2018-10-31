@@ -42,6 +42,6 @@ variable "AWS_DEFAULT_REGION" {
 }
 
 variable "cloud_provider" {
-  default = "aws"
+  default     = "aws"
   description = "cloud provider for rke"
 }

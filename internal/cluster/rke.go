@@ -163,6 +163,9 @@ func RKEReset() {
 
 // Remove is used to remove the Kubernetes Cluster from the infrastructure
 func RKERemove() {
+	var Name string
+	config := GetRKEConfig()
+	Name = config.ClusterName
 	log.Println("Removing rke cluster")
 	rkeConfig := "./inventory/" + Name + "/provisioner/rancher-cluster.yml"
 	rkeRemove := exec.Command("rke", "remove", "--config", rkeConfig)
