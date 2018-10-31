@@ -89,3 +89,7 @@ variable "cluster_id" {
 variable "cloud_provider" {
   type = "string"
 }
+
+variable "authorization" {
+  type = "string"
+}

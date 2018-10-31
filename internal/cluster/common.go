@@ -104,6 +104,7 @@ type RKEConfig struct {
 	SSHKeyPath          string
 	CloudProvider       string
 	NodeOS              string
+	Authorization       string
 }
 
 func GetRKEConfig() RKEConfig {
@@ -114,6 +115,7 @@ func GetRKEConfig() RKEConfig {
 		RKENodeInstanceType: viper.GetString("rke.rke_node_instance_type"),
 		NodeCount:           viper.GetInt("rke.node_count"),
 		CloudProvider:       viper.GetString("rke.cloud_provider"),
+		Authorization:       viper.GetString("rke.authorization"),
 	}
 }
 

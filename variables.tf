@@ -29,6 +29,12 @@ variable "node_count" {
   description = "Autoscaling Desired node capacity"
 }
 
+variable "authorization" {
+  default     = "rbac"
+  type        = "string"
+  description = "authorization mode in rke cluster"
+}
+
 variable "AWS_ACCESS_KEY_ID" {
   description = "AWS Access Key"
 }

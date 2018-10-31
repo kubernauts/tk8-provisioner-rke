@@ -13,6 +13,10 @@ data rke_node_parameter "nodes" {
 resource rke_cluster "cluster" {
   nodes_conf = ["${data.rke_node_parameter.nodes.*.json}"]
 
+  authorization {
+    mode = "${var.authorization}"
+  }
+
   cloud_provider {
     name = "aws"
   }

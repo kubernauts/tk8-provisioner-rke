@@ -35,6 +35,12 @@ variable "cloud_provider" {
   description = "cloud provider for rke cluster" 
 }
 
+variable "authorization" {
+  default = "{{.Authorization}}"
+  type    = "string"
+  description = "authorization mode in rke cluster"
+}
+
 variable "AWS_ACCESS_KEY_ID" {
   description = "AWS Access Key"
 }

@@ -54,9 +54,9 @@ func (p RKE) Setup(args []string) {
 	rkeProvisionerPath := usr.HomeDir + "/.terraform.d/plugins/terraform-provider-rke"
 	exists, _ := checkRKEProvisionerFile(rkeProvisionerPath)
 	if !exists {
-		fmt.Println("Terraform RKE provisioner plugin does not exists. Please check https://github.com/yamamoto-febc/terraform-provider-rke for installation instructions specific to your OS.")
+		log.Fatalln("Terraform RKE provisioner plugin does not exists. Please check https://github.com/yamamoto-febc/terraform-provider-rke for installation instructions specific to your OS.")
 	} else {
-		fmt.Println("Terraform RKE provisioner exists. Good to go!")
+		log.Println("Terraform RKE provisioner exists. Good to go!")
 	}
 
 	//Check if kubectl version is greater or equal to 1.10

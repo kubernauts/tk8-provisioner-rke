@@ -6,6 +6,7 @@ module "rke" {
   aws_region             = "${var.aws_region}"
   rke_node_instance_type = "${var.rke_node_instance_type}"
   node_count             = "${var.node_count}"
+  authorization          = "${var.authorization}"
   cloud_provider         = "${var.cloud_provider}"
   AWS_ACCESS_KEY_ID      = "${var.AWS_ACCESS_KEY_ID}"
   AWS_SECRET_ACCESS_KEY  = "${var.AWS_SECRET_ACCESS_KEY}"
