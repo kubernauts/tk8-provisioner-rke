@@ -1,6 +1,8 @@
 package cluster
 
 import (
+	"log"
+
 	"github.com/kubernauts/tk8/pkg/common"
 	"github.com/spf13/viper"
 )
@@ -8,6 +10,13 @@ import (
 var (
 	kubesprayVersion = "version-0-4"
 )
+
+type AwsCredentials struct {
+	AwsAccessKeyID   string
+	AwsSecretKey     string
+	AwsAccessSSHKey  string
+	AwsDefaultRegion string
+}
 
 type RKEConfig struct {
 	ClusterName         string
@@ -21,7 +30,7 @@ type RKEConfig struct {
 }
 
 func GetRKEConfig() RKEConfig {
-	common.ReadViperConfigFile("config")
+	ReadViperConfigFile("config")
 	return RKEConfig{
 		ClusterName:         viper.GetString("rke.cluster_name"),
 		AWSRegion:           viper.GetString("rke.rke_aws_region"),
@@ -36,5 +45,16 @@ func SetClusterName() {
 	if len(common.Name) < 1 {
 		config := GetRKEConfig()
 		common.Name = config.ClusterName
+	}
+}
+
+// ReadViperConfigFile is define the config paths and read the configuration file.
+func ReadViperConfigFile(configName string) {
+	viper.SetConfigName(configName)
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("/tk8")
+	verr := viper.ReadInConfig() // Find and read the config file.
+	if verr != nil {             // Handle errors reading the config file.
+		log.Fatalln(verr)
 	}
 }

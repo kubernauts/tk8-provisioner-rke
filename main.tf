@@ -3,7 +3,7 @@
 module "rke" {
   source                 = "./modules/rke"
   cluster_name           = "${var.cluster_name}"
-  aws_region             = "${var.aws_region}"
+  rke_aws_region         = "${var.rke_aws_region}"
   rke_node_instance_type = "${var.rke_node_instance_type}"
   node_count             = "${var.node_count}"
   authorization          = "${var.authorization}"

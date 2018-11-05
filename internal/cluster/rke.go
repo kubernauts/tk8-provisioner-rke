@@ -66,7 +66,7 @@ func rkeDistSelect() (string, string) {
 // GetDistConfig is used to get config details specific to a particular distribution.
 // Used to determine various details such as the SSH user about the distribution.
 func rkeGetDistConfig() (string, string, string) {
-	common.ReadViperConfigFile("config")
+	ReadViperConfigFile("config")
 	awsAmiID := viper.GetString("rke.ami_id")
 	awsInstanceOS := viper.GetString("rke.node_os")
 	sshUser := viper.GetString("rke.ssh_user")

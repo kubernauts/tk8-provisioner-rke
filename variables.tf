@@ -5,7 +5,7 @@ variable "cluster_name" {
   description = "The name of your EKS Cluster"
 }
 
-variable "aws_region" {
+variable "rke_aws_region" {
   default = "us-east-1"
 
   # availabe regions are:

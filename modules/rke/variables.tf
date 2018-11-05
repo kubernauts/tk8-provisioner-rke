@@ -62,7 +62,7 @@ variable "cluster_name" {
   type = "string"
 }
 
-variable "aws_region" {
+variable "rke_aws_region" {
   type = "string"
 }
 
