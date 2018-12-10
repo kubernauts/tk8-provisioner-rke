@@ -83,31 +83,28 @@ func rkePrepareConfigFiles(InstanceOS string, Name string) {
 
 // Install is used to setup the Kubernetes Cluster with RKE
 func Install() {
-	var Name string
-	config := GetRKEConfig()
-	Name = config.ClusterName
-	os.MkdirAll("./inventory/"+Name+"/provisioner/modules/rke", 0755)
-	exec.Command("cp", "-rfp", "./provisioner/rke/", "./inventory/"+Name+"/provisioner").Run()
+	os.MkdirAll("./inventory/"+common.Name+"/provisioner/modules/rke", 0755)
+	exec.Command("cp", "-rfp", "./provisioner/rke/", "./inventory/"+common.Name+"/provisioner").Run()
 	rkeSSHUser, rkeOSLabel := rkeDistSelect()
 	fmt.Printf("Prepairing Setup for user %s on %s\n", rkeSSHUser, rkeOSLabel)
-	rkePrepareConfigFiles(rkeOSLabel, Name)
+	rkePrepareConfigFiles(rkeOSLabel, common.Name)
 	// Check if a terraform state file already exists
-	if _, err := os.Stat("./inventory/" + Name + "/provisioner/terraform.tfstate"); err == nil {
+	if _, err := os.Stat("./inventory/" + common.Name + "/provisioner/terraform.tfstate"); err == nil {
 		log.Println("There is an existing cluster, please remove terraform.tfstate file or delete the installation before proceeding")
 	} else {
 		log.Println("starting terraform init")
 
-		provisioner.ExecuteTerraform("init", "./inventory/"+Name+"/provisioner/")
+		provisioner.ExecuteTerraform("init", "./inventory/"+common.Name+"/provisioner/")
 
 	}
 
-	provisioner.ExecuteTerraform("apply", "./inventory/"+Name+"/provisioner/")
+	provisioner.ExecuteTerraform("apply", "./inventory/"+common.Name+"/provisioner/")
 
 	// Export KUBECONFIG file to the installation folder
 
-	kubeConfig := "./inventory/" + Name + "/provisioner/kube_config_cluster.yml"
+	kubeConfig := "./inventory/" + common.Name + "/provisioner/kube_config_cluster.yml"
 	log.Println("Kubeconfig file can be found at: ", kubeConfig)
-	rkeConfig := "./inventory/" + Name + "/provisioner/rancher-cluster.yml"
+	rkeConfig := "./inventory/" + common.Name + "/provisioner/rancher-cluster.yml"
 	log.Println("RKE cluster config file can be found at: ", rkeConfig)
 
 	log.Println("Voila! Kubernetes cluster created with RKE is up and running")
@@ -123,11 +120,8 @@ func RKEReset() {
 
 // Remove is used to remove the Kubernetes Cluster from the infrastructure
 func RKERemove() {
-	var Name string
-	config := GetRKEConfig()
-	Name = config.ClusterName
 	log.Println("Removing rke cluster")
-	rkeConfig := "./inventory/" + Name + "/provisioner/rancher-cluster.yml"
+	rkeConfig := "./inventory/" + common.Name + "/provisioner/rancher-cluster.yml"
 	rkeRemove := exec.Command("rke", "remove", "--config", rkeConfig)
 	stdout, err := rkeRemove.StdoutPipe()
 	rkeRemove.Stderr = rkeRemove.Stdout
@@ -147,9 +141,6 @@ func RKERemove() {
 }
 
 func RKEDestroy() {
-	config := GetRKEConfig()
-	Name := config.ClusterName
 	log.Println("starting terraform destroy")
-
-	provisioner.ExecuteTerraform("destroy", "./inventory/"+Name+"/provisioner/")
+	provisioner.ExecuteTerraform("destroy", "./inventory/"+common.Name+"/provisioner/")
 }
