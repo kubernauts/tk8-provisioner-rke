@@ -75,9 +75,9 @@ func rkeGetDistConfig() (string, string, string) {
 
 func rkePrepareConfigFiles(InstanceOS string, Name string) {
 	fmt.Println(InstanceOS)
-	templates.ParseTemplate(templates.VariablesRKE, "./inventory/"+Name+"/provisioner/variables.tf", GetRKEConfig())
-	templates.ParseTemplate(templates.DistVariablesRKE, "./inventory/"+Name+"/provisioner/modules/rke/distos.tf", rkeDistOSMap[InstanceOS])
-	templates.ParseTemplate(templates.Credentials, "./inventory/"+Name+"/provisioner/credentials.tfvars", common.GetCredentials())
+	templates.ParseTemplate(templates.VariablesRKE, "./inventory/"+common.Name+"/provisioner/variables.tf", GetRKEConfig())
+	templates.ParseTemplate(templates.DistVariablesRKE, "./inventory/"+common.Name+"/provisioner/modules/rke/distos.tf", rkeDistOSMap[InstanceOS])
+	templates.ParseTemplate(templates.Credentials, "./inventory/"+common.Name+"/provisioner/credentials.tfvars", common.GetCredentials())
 
 }
 
