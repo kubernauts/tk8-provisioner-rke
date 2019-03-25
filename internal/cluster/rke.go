@@ -90,7 +90,7 @@ func Install() {
 	rkePrepareConfigFiles(rkeOSLabel, common.Name)
 	// Check if a terraform state file already exists
 	if _, err := os.Stat("./inventory/" + common.Name + "/provisioner/terraform.tfstate"); err == nil {
-		log.Println("There is an existing cluster, please remove terraform.tfstate file or delete the installation before proceeding")
+		log.Fatal("There is an existing cluster, please remove terraform.tfstate file or delete the installation before proceeding")
 	} else {
 		log.Println("starting terraform init")
 
@@ -110,6 +110,17 @@ func Install() {
 	log.Println("Voila! Kubernetes cluster created with RKE is up and running")
 
 	os.Exit(0)
+
+}
+
+func Upgrade() {
+	if _, err := os.Stat("./inventory/" + common.Name + "/provisioner/terraform.tfstate"); err == nil {
+		if os.IsNotExist(err) {
+			log.Fatal("No terraform.tfstate file found. Upgrade can only be done on an existing cluster.")
+		}
+	}
+	log.Println("Starting Upgrade of the existing cluster")
+	provisioner.ExecuteTerraform("apply", "./inventory/"+common.Name+"/provisioner/")
 
 }
 

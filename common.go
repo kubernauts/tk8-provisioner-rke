@@ -110,7 +110,8 @@ func (p RKE) Remove(args []string) {
 }
 
 func (p RKE) Upgrade(args []string) {
-	provisioner.NotImplemented()
+	cluster.Upgrade()
+
 }
 
 func (p RKE) Destroy(args []string) {
